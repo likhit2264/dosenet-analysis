@@ -83,8 +83,8 @@ def get_times(rows, number, n=1):
     Returns:
       - list of times
     '''
-    entries = 12*n
-    days = (24/n)
+    entries = 600*n
+    days = (144/n)
     i = 0
     counter = 0
     times = []
@@ -93,8 +93,11 @@ def get_times(rows, number, n=1):
             time_range = []
             integration = rows[(i*entries)+1:((i+1)*entries)+1]
             for j in integration:
-                time_range.append(parse(j[1]))
-            times.append(time_range[int(len(time_range)/2)])
+                if len(j) > 1:
+                    this_time = int(j[10])/1000.0
+                    time_range.append(datetime.fromtimestamp(this_time))
+            if len(time_range) > 0:
+                times.append(time_range[int(len(time_range)/2)])
             counter+=1
             i+=1
         else:
@@ -159,7 +162,6 @@ def double_peak_finder(array,lower,upper):
     pfit_leastsq = pfit
     perr_leastsq = np.array(error) 
     return pfit_leastsq, perr_leastsq 
-
 
 def peak_finder(array,lower,upper,count_offset): 
     '''
@@ -291,8 +293,8 @@ def get_peaks(rows, number=1, n=1, lower_limit=480, upper_limit=600, make_plot =
       - lists of means,sigmas,amps from all gaussian fits
         - each entry in list includes the value and uncertainty
     '''
-    entries = 12*n
-    days = (24/n)
+    entries = 600*n
+    days = (144/n)
     print('making {} plots for each day'.format(days))
     i = 0
     counter = 0
@@ -304,7 +306,8 @@ def get_peaks(rows, number=1, n=1, lower_limit=480, upper_limit=600, make_plot =
             integration = rows[(i*entries)+1:((i+1)*entries)+1]
             array_lst = [] 
             for j in integration:
-                array_lst.append(make_array(j,12))
+                if len(j) > 1:
+                    array_lst.append(make_array(j,12))
 
             integrated = sum(array_lst)
             #print integrated
@@ -321,7 +324,7 @@ def get_peaks(rows, number=1, n=1, lower_limit=480, upper_limit=600, make_plot =
                 plt.title('Spectra integrated over a day')
                 plt.xlabel('channels')
                 plt.ylabel('counts')
-                plt.xlim(1,500)
+                plt.xlim(1,1000)
                 #plt.ylim()
                 x = ar(range(0,len(integrated)))
                 plt.plot(x,integrated,'b:',label='data')
@@ -505,11 +508,17 @@ def spectrum_peaks_plotter(rows):
     plt.show()
     
 if __name__ == '__main__':
-	# import data from weather station for all isotopes
+	# import data from PERM station for all isotopes
+    PATH1 = '/Users/alihanks/Google Drive/NQUAKE_analysis/PERM/PERM_data/lbnl_sensor_60.csv'
+    with open(PATH1) as f:
+        reader = csv.reader(f)
+        rows = [r for r in reader]
+
     date = []
     cpm = []
     cpm_error = []
     line = 0
+
     #url = 'https://radwatch.berkeley.edu/sites/default/files/dosenet/lbl_outside_d3s.csv'
     url = 'https://radwatch.berkeley.edu/sites/default/files/dosenet/etch_roof_d3s.csv'
     print(url)
@@ -646,7 +655,7 @@ if __name__ == '__main__':
     plt.xlabel('Time')
     plt.ylabel('keV/channel')
     #plt.ylim(4.9,5.15)
-    plt.ylim(4.6,6.0)
+    #plt.ylim(4.6,6.0)
     ax.plot(times,calibs, 'bo')
     ax.errorbar(times,calibs,yerr=calib_err,fmt='bo',ecolor='b')
     fig.autofmt_xdate()
@@ -679,4 +688,5 @@ if __name__ == '__main__':
     
     # Show all plots - add autosave?
     plt.show()
+
     peaksplot= spectrum_peaks_plotter(rows)

@@ -2,9 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import csv
 
-PATH1 = 'lbl_outside_d3s.csv'
-PATH2 = 'etch_roof_d3s.csv'
-
+#PATH1 = '/Users/alihanks/Google Drive/NQUAKE_analysis/PERM/PERM_data/lbnl_sensor_60.csv'
+PATH1 = '/Users/alihanks/Google Drive/NQUAKE_analysis/D3S/data/lbl_outside_d3s.csv'
 
 def make_int(lst): 
 	'''
@@ -23,15 +22,6 @@ def make_array(lst):
 	y = np.asarray(make_int(lst[12:]))
 	return y
 
-def potassium_peak_finder(array): 
-	'''
-	Peak Finder for Potassium. Needs more development
-	'''
-	potassium = list(array[260:301])
-	peak = max(potassium)
-	actual_index = 260 + potassium.index(peak)
-	return actual_index, peak
-
 def main_potassium(number, n=1, lower_limit=270, upper_limit=292): 
 	'''
 	Main Function. 
@@ -43,7 +33,7 @@ def main_potassium(number, n=1, lower_limit=270, upper_limit=292):
 	In order to plot individual spectra, tune the lower_limit and upper_limit (these only plot spectra outside the range)
 	'''
 
-	entries = 12*n
+	entries = 300*n
 	anomaly = []
 	days = (24/n)
 	i = 0
@@ -58,19 +48,13 @@ def main_potassium(number, n=1, lower_limit=270, upper_limit=292):
 				array_lst.append(make_array(j))
 
 			integrated = sum(array_lst)
-			actual_index, peak = potassium_peak_finder(integrated)
-			indexes.append(actual_index)
-			if actual_index < lower_limit or actual_index > upper_limit:
-				anomaly.append([actual_index, peak, integrated, i])
-				plt.semilogy(integrated)
-				plt.semilogy(actual_index, peak, 'ro')
-				plt.show()
+
 			fig, ax = plt.subplots()
 			fig.patch.set_facecolor('white')
-			plt.title('Spectra integrated over a day')
+			plt.title('PERM Spectra')
 			plt.xlabel('channels')
 			plt.ylabel('counts')
-			plt.xlim(1,500)
+			plt.xlim(1,1000)
 			#plt.ylim()
 			x = range(0,len(integrated))
 			ax.plot(x, integrated, 'bo-', label="CPM")
@@ -107,17 +91,10 @@ def main_potassium(number, n=1, lower_limit=270, upper_limit=292):
 
 
 if __name__ == '__main__':
-	with open(PATH2) as f:
-	    reader = csv.reader(f)
-	    rows = [r for r in reader]
-
-	print('This data is taken from the {} csv'.format(PATH2))
-	main_potassium(len(rows), n=24, lower_limit=270, upper_limit=292)
-
 	with open(PATH1) as f:
 	    reader = csv.reader(f)
 	    rows = [r for r in reader]
 
 	print('This data is taken from the {} csv'.format(PATH1))
-	main_potassium(len(rows), n=24, lower_limit=270, upper_limit=292)
+	main_potassium(len(rows), n=1, lower_limit=270, upper_limit=292)
 
