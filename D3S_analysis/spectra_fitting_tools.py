@@ -22,10 +22,10 @@ def fixed(fix,par):
     return bound((fix,fix), par)
 
 def gaus(x,a,x0,sigma):
-    return a*exp(-(x-x0)**2/(2*sigma**2))+lbound(0,a)+lbound(0,sigma)+lbound(0,x0)
+    return a*exp(-(x-x0)**2/(2*sigma**2))+lbound(0,a)+bound([0,7],sigma)+lbound(0,x0)
 
 def expo(x,a,slope):
-    return a*exp(x*slope)
+    return a*exp(x*slope)+lbound(0,a)+ubound(0,slope)
 
 # p = [a1,mean,sigma,a2,shift,slope,const]
 def gaus_plus_exp(x,p):
@@ -75,7 +75,7 @@ def peak_fitter(x,y,fit_function,pinit):
     perr_leastsq = np.array(error) 
     return pfit_leastsq, perr_leastsq 
 
-def single_peak_fit(array,lower,upper,count_offset=1,make_plot=False):
+def single_peak_fit(array,counter,lower,upper,count_offset=1,make_plot=False,plot_name=''):
     """
     Performs single gaussian + exponential background fit
 
@@ -95,8 +95,6 @@ def single_peak_fit(array,lower,upper,count_offset=1,make_plot=False):
     mean = lower + (upper - lower)/2.0
     slope = (np.log(counts[-1])-np.log(counts[0]))/(points[-1]-points[0])
     pinit = [counts[0],mean,5.0,counts[0]*count_offset,slope]
-    if verbose:
-        print(pinit)
     pars,errs = peak_fitter(points,counts,gaus_plus_exp,pinit)
     if make_plot:
         fig = plt.figure()
@@ -104,23 +102,25 @@ def single_peak_fit(array,lower,upper,count_offset=1,make_plot=False):
         plt.title('Spectra integrated over a day')
         plt.xlabel('channels')
         plt.ylabel('counts')
-        plt.xlim(1,500)
+        plt.xlim(lower,upper)
         #plt.ylim()
         x = ar(range(0,len(array)))
         plt.plot(x,array,'b:',label='data')
         plt.plot(x,gaus_plus_exp(x,pars),'ro:',label='fit')
         plt.legend()
         plt.yscale('log')
-        plt.show()
+        fig_file = '/Users/alihanks/Google Drive/NQUAKE_analysis/D3S/fit_plots/'+plot_name+'_fit_'+str(counter)+'.pdf'
+        plt.savefig(fig_file)
+        plt.close()
 
     if verbose:
         par_labels = ['norm','mean','sigma','amp','slope']
         for i in range(len(pars)):
-            print('{}: {} +/- {}'.format(par_labels[i],pars[i],errs[i]))
+            print('{}-{}: {} +/- {}'.format(par_labels[i],counter,pars[i],errs[i]))
 
     return [pars[1],errs[1]],[pars[2],errs[2]],[pars[0],errs[0]]
 
-def double_peak_fit(array,lower,upper,pindex=0,count_offset=1,make_plot=False):
+def double_peak_fit(array,counter,lower,upper,pindex=0,count_offset=1,make_plot=False,plot_name=''):
     """
     Performs double gaussian + exponential background fit
 
@@ -140,15 +140,13 @@ def double_peak_fit(array,lower,upper,pindex=0,count_offset=1,make_plot=False):
     nentries = len(points)
     mean = lower + (upper - lower)/2.0
     slope = (np.log(counts[-1])-np.log(counts[0]))/(points[-1]-points[0])
-    pinit = [counts[0]/7.0,mean-5,3.0,counts[0]/7.0,mean+5,3.0, \
+    pinit = [counts[0]/7.0,mean-5.0,3.0,counts[0]/7.0,mean+5.0,3.0, \
              counts[0]*count_offset,slope]
-    if verbose:
-        print(pinit)
     pars,errs = peak_fitter(points,counts,double_gaus_plus_exp,pinit)
     if verbose:
         par_labels = ['norm1','mean1','sigma1','norm2','mean2','sigma2','amp','slope']
         for i in range(len(pars)):
-            print('{}: {} +/- {}'.format(par_labels[i],pars[i],errs[i]))
+            print('{}-{}: {} +/- {}'.format(par_labels[i],counter,pars[i],errs[i]))
 
     if make_plot:
         fig = plt.figure()
@@ -156,13 +154,16 @@ def double_peak_fit(array,lower,upper,pindex=0,count_offset=1,make_plot=False):
         plt.title('Spectra integrated over a day')
         plt.xlabel('channels')
         plt.ylabel('counts')
-        plt.xlim(1,500)
+        plt.xlim(lower,upper)
+        plt.ylim(20,1000)
         x = ar(range(0,len(array)))
         plt.plot(x,array,'b:',label='data')
         plt.plot(x,double_gaus_plus_exp(x,pars),'ro:',label='fit')
         plt.legend()
         plt.yscale('log')
-        plt.show()
+        fig_file = '/Users/alihanks/Google Drive/NQUAKE_analysis/D3S/fit_plots/'+plot_name+'_fit_'+str(counter)+'.pdf'
+        plt.savefig(fig_file)
+        plt.close()
 
     mean = [pars[1],errs[1]]
     sigma = [pars[2],errs[2]]

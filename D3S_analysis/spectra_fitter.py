@@ -66,7 +66,7 @@ def make_array(lst):
     Makes list into an array. Also splices out the irrelevant stuff 
     for a spectra
     '''
-    y = np.asarray(make_int(lst[12:]))
+    y = np.asarray(make_int(lst[24:]))
     return y
 
 def get_times(rows, number, n=1):
@@ -81,8 +81,8 @@ def get_times(rows, number, n=1):
     Returns:
       - list of times
     '''
-    entries = 12*n
-    days = (24/n)
+    entries = 600*n
+    days = (144/n)
     i = 0
     counter = 0
     times = []
@@ -91,8 +91,11 @@ def get_times(rows, number, n=1):
             time_range = []
             integration = rows[(i*entries)+1:((i+1)*entries)+1]
             for j in integration:
-                time_range.append(parse(j[1]))
-            times.append(time_range[int(len(time_range)/2)])
+                if len(j) > 1:
+                    this_time = int(j[10])/1000.0
+                    time_range.append(datetime.fromtimestamp(this_time))
+            if len(time_range) > 0:
+                times.append(time_range[int(len(time_range)/2)])
             counter+=1
             i+=1
         else:
@@ -159,7 +162,6 @@ def double_peak_finder(array,lower,upper):
     pfit_leastsq = pfit
     perr_leastsq = np.array(error) 
     return pfit_leastsq, perr_leastsq 
-
 
 def peak_finder(array,lower,upper,count_offset): 
     '''
@@ -295,8 +297,8 @@ def get_peaks(rows, number=1, n=1, lower_limit=240, upper_limit=300, make_plot =
       - lists of means,sigmas,amps from all gaussian fits
         - each entry in list includes the value and uncertainty
     '''
-    entries = 12*n
-    days = (24/n)
+    entries = 600*n
+    days = (144/n)
     print('making {} plots for each day'.format(days))
     i = 0
     counter = 0
@@ -308,7 +310,8 @@ def get_peaks(rows, number=1, n=1, lower_limit=240, upper_limit=300, make_plot =
             integration = rows[(i*entries)+1:((i+1)*entries)+1]
             array_lst = [] 
             for j in integration:
-                array_lst.append(make_array(j))
+                if len(j) > 1:
+                    array_lst.append(make_array(j))
 
             integrated = sum(array_lst)
             #print integrated
@@ -325,7 +328,7 @@ def get_peaks(rows, number=1, n=1, lower_limit=240, upper_limit=300, make_plot =
                 plt.title('Spectra integrated over a day')
                 plt.xlabel('channels')
                 plt.ylabel('counts')
-                plt.xlim(1,500)
+                plt.xlim(1,1000)
                 #plt.ylim()
                 x = ar(range(0,len(integrated)))
                 plt.plot(x,integrated,'b:',label='data')
@@ -372,7 +375,7 @@ def get_peak_counts(means,sigmas,amps):
     '''
     counts = []
     for i in range(len(means)):
-        count,err = quad(gaus,0,500,args=(amps[i],means[i],sigmas[i]))
+        count,err = quad(gaus,0,1000,args=(amps[i],means[i],sigmas[i]))
         counts.append(count)
     return counts
 
@@ -398,39 +401,25 @@ def get_calibration(rows,ndays):
     return calibration_constant
 
 if __name__ == '__main__':
-	# import data from weather station for all isotopes
+	# import data from PERM station for all isotopes
+    PATH1 = '/Users/alihanks/Google Drive/NQUAKE_analysis/PERM/PERM_data/lbnl_sensor_60.csv'
+    with open(PATH1) as f:
+        reader = csv.reader(f)
+        rows = [r for r in reader]
+
     date = []
     cpm = []
     cpm_error = []
     line = 0
-    #url = 'https://radwatch.berkeley.edu/sites/default/files/dosenet/lbl_outside_d3s.csv'
-    url = 'https://radwatch.berkeley.edu/sites/default/files/dosenet/etch_roof_d3s.csv'
-    print(url)
-    response = urllib2.urlopen(url)
-    print(response)
-    rows = []
-    reader = csv.reader(response, delimiter=",")
-
-    for row in reader:
-        rows.append(row)
-    #    if line > 0:
-    #        date.append(parse(row[1]))
-    #        cpm.append(float(row[3]))
-    #        cpm_error.append(float(row[4]))
-    #    line += 1
-    #print 'collected data between ', date[0], ' and ', date[-1]
-
-    #get_calibration(rows,5)
 
     #---------------------------------------------------------------------#
     # Get fit results for ndays integrating over nhours for each fit
     #---------------------------------------------------------------------#
-    ndays = 7
+    ndays = 1
     nhours = 1
     times = get_times(rows,ndays,nhours)
-    K_peaks, K_sigmas, K_amps = get_peaks(rows,ndays,nhours,220,320)
-    #Bi_peaks,Bi_sigmas,Bi_amps = get_double_peaks(rows,ndays,nhours,80,160)
-    Bi_peaks,Bi_sigmas,Bi_amps = get_peaks(rows,ndays,nhours,82,162,False,1)
+    K_peaks, K_sigmas, K_amps = get_peaks(rows,ndays,nhours,480,620)
+    Bi_peaks,Bi_sigmas,Bi_amps = get_peaks(rows,ndays,nhours,180,250,False,1)
 
     #-------------------------------------------------------------------------#
     # Break apart mean,sigma,amp values and uncertainties
@@ -511,7 +500,7 @@ if __name__ == '__main__':
     plt.xlabel('Time')
     plt.ylabel('keV/channel')
     #plt.ylim(4.9,5.15)
-    plt.ylim(4.6,6.0)
+    #plt.ylim(4.6,6.0)
     ax.plot(times,calibs, 'bo')
     ax.errorbar(times,calibs,yerr=calib_err,fmt='bo',ecolor='b')
 
