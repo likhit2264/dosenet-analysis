@@ -7,7 +7,14 @@ import matplotlib.dates as mdates
 from dateutil.parser import parse
 from datetime import datetime
 from datetime import timedelta
-import urllib.request
+
+# Python 2 and 3: easiest option
+from future.standard_library import install_aliases
+install_aliases()
+from urllib.parse import urlparse, urlencode
+from urllib.request import urlopen, Request
+from urllib.error import HTTPError
+
 import pytz
 import codecs
 from matplotlib.backends.backend_pdf import PdfPages
@@ -64,6 +71,7 @@ def make_int(lst):
     for i in lst:
         y.append(int(i))
     return y
+
 def make_array(lst,low=10,high=1032): 
     '''
     Makes list into an array. Also splices out the irrelevant stuff 
@@ -106,6 +114,7 @@ def get_times(rows, number, n=1):
 
     print('finished', i)
     counter = 0
+    print(times)
     return times
 
 def double_peak_finder(array,lower,upper):
@@ -306,12 +315,19 @@ def get_peaks(rows, number=1, n=1, lower_limit=480, upper_limit=600, make_plot =
             integration = rows[(i*entries)+1:((i+1)*entries)+1]
             array_lst = [] 
             for j in integration:
-                if len(j) > 1:
+                try:
                     array_lst.append(make_array(j,12))
+                except:
+                    print('Error processing {} as a list'.format(j))
+                    pass
 
             integrated = sum(array_lst)
             #print integrated
-            fit_pars,fit_errs = peak_finder(integrated,lower_limit,upper_limit,count_offset)
+            try:
+                fit_pars,fit_errs = peak_finder(integrated,lower_limit,upper_limit,count_offset)
+            except:
+                print('Error fitting {}'.format(integrated))
+                pass
             means.append([fit_pars[1],fit_errs[1]])
             sigmas.append([fit_pars[2],fit_errs[2]])
             amps.append([fit_pars[0],fit_errs[0]])
@@ -366,7 +382,11 @@ def get_peaks2(rows, number=1, n=1, lower_limit=900, upper_limit=1020, make_plot
             integration = rows[(i*entries)+1:((i+1)*entries)+1]
             array_lst = [] 
             for j in integration:
-                array_lst.append(make_array(j,12))
+                try:
+                    array_lst.append(make_array(j,12))
+                except:
+                    print('Error processing {} as a list'.format(j))
+                    pass
 
             integrated = sum(array_lst)
             #print integrated
@@ -509,7 +529,8 @@ def spectrum_peaks_plotter(rows):
     
 if __name__ == '__main__':
 	# import data from PERM station for all isotopes
-    PATH1 = '/Users/alihanks/Google Drive/NQUAKE_analysis/PERM/PERM_data/lbnl_sensor_60.csv'
+    #PATH1 = '/Users/alihanks/Google Drive/NQUAKE_analysis/PERM/PERM_data/lbnl_sensor_60.csv'
+    PATH1 = '/Users/alihanks/Google Drive/NQUAKE_analysis/PERM/PERM_data/lbnl_sensor_60_aug.csv'
     with open(PATH1) as f:
         reader = csv.reader(f)
         rows = [r for r in reader]
@@ -518,26 +539,6 @@ if __name__ == '__main__':
     cpm = []
     cpm_error = []
     line = 0
-
-    #url = 'https://radwatch.berkeley.edu/sites/default/files/dosenet/lbl_outside_d3s.csv'
-    url = 'https://radwatch.berkeley.edu/sites/default/files/dosenet/etch_roof_d3s.csv'
-    print(url)
-    response = urllib.request.urlopen(url)
-    print(response)
-    rows = []
-    # Reading file in python 3
-    reader = csv.reader(codecs.iterdecode(response, 'utf-8'))
-
-    for row in reader:
-        rows.append(row)
-    #    if line > 0:
-    #        date.append(parse(row[1]))
-    #        cpm.append(float(row[3]))
-    #        cpm_error.append(float(row[4]))
-    #    line += 1
-    #print 'collected data between ', date[0], ' and ', date[-1]
-
-    #get_calibration(rows,5)
 
     #---------------------------------------------------------------------#
     # Get fit results for ndays integrating over nhours for each fit

@@ -34,12 +34,17 @@ def weather_station_data_scrape(ID, date):
     str5 = '&graphspan=day&format=1'
     url = str1+ID+str2+str(date.day)+str3+str(date.month)\
           +str4+str(date.year)+str5
+    print(url)
     response = urlopen(url)
     #cr = csv.reader(response)
     cr=csv.reader(io.TextIOWrapper(response))
     for row in cr:
         if len(row)<= 1: continue
         data_temp.append(row)
+
+    # return empty list if there is no data for that day
+    if len(data_temp) < 2:
+        return []
 
     #Stores data with correct data type (datetime/string/double)
     data = [[0 for i in range(len(data_temp[1][:])-3)] for j in range(len(data_temp))]
@@ -48,12 +53,30 @@ def weather_station_data_scrape(ID, date):
         if i == 0:
             data[0][:]=data_temp[0][0:len(data_temp[i][:])-2]
         elif i > 0:
-            data[i][0]=datetime.strptime(data_temp[i][0], '%Y-%m-%d %H:%M:%S')
-            data[i][1:data_temp[0][:].index('WindDirection')]=tuple(float(list_item) for list_item in data_temp[i][1:data_temp[0][:].index('WindDirection')])
-            data[i][data_temp[0][:].index('WindDirection')] = data_temp[i][data_temp[0][:].index('WindDirection')]
-            data[i][data_temp[0][:].index('WindDirection')+1:data_temp[0][:].index('Conditions')] = tuple(float(list_item) for list_item in data_temp[i][data_temp[0][:].index('WindDirection')+1:data_temp[0][:].index('Conditions')])
-            data[i][data_temp[0][:].index('Conditions'):data_temp[0][:].index('Clouds')+1] = data_temp[i][data_temp[0][:].index('Conditions'):data_temp[0][:].index('Clouds')+1]
-            data[i][data_temp[0][:].index('Clouds')+1:len(data_temp[0][:])-2] = tuple(float(list_item) for list_item in data_temp[i][data_temp[0][:].index('Clouds')+1:len(data_temp[i][:])-3])
+            try:
+                data[i][0]=datetime.strptime(data_temp[i][0], '%Y-%m-%d %H:%M:%S')
+            except:
+                pass
+            try:
+                data[i][1:data_temp[0][:].index('WindDirection')]=tuple(float(list_item) for list_item in data_temp[i][1:data_temp[0][:].index('WindDirection')])
+            except:
+                pass
+            try:
+                data[i][data_temp[0][:].index('WindDirection')] = data_temp[i][data_temp[0][:].index('WindDirection')]
+            except:
+                pass
+            try:
+                data[i][data_temp[0][:].index('WindDirection')+1:data_temp[0][:].index('Conditions')] = tuple(float(list_item) for list_item in data_temp[i][data_temp[0][:].index('WindDirection')+1:data_temp[0][:].index('Conditions')])
+            except:
+                pass
+            try:
+                data[i][data_temp[0][:].index('Conditions'):data_temp[0][:].index('Clouds')+1] = data_temp[i][data_temp[0][:].index('Conditions'):data_temp[0][:].index('Clouds')+1]
+            except:
+                pass
+            try:
+                data[i][data_temp[0][:].index('Clouds')+1:len(data_temp[0][:])-2] = tuple(float(list_item) for list_item in data_temp[i][data_temp[0][:].index('Clouds')+1:len(data_temp[i][:])-3])
+            except:
+                pass
 
     #Select data for output array:
     #   (Date,Temperature, Pressure, Windspeed, Humidity,
