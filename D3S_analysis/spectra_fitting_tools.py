@@ -22,7 +22,7 @@ def fixed(fix,par):
     return bound((fix,fix), par)
 
 def gaus(x,a,x0,sigma):
-    return a*exp(-(x-x0)**2/(2*sigma**2))+lbound(0,a)+bound([0,7],sigma)+lbound(0,x0)
+    return a*exp(-(x-x0)**2/(2*sigma**2))+lbound(0,a)+lbound(0,sigma)+lbound(0,x0)
 
 def expo(x,a,slope):
     return a*exp(x*slope)+lbound(0,a)+ubound(0,slope)
@@ -89,8 +89,8 @@ def single_peak_fit(array,lower,upper,sigma,count_offset=1,make_plot=False,save_
         list of fit parameters+errors
     """
     points = ar(range(lower,upper))
-    count_list = list(array[lower:upper])
-    counts = ar(list(array[lower:upper]))
+    count_list = list(array[:])
+    counts = array
 
     nentries = len(points)
     mean = lower + (upper - lower)/2.0
@@ -98,14 +98,15 @@ def single_peak_fit(array,lower,upper,sigma,count_offset=1,make_plot=False,save_
     max_index = count_list.index(max_value)
     if max_index > points[0]+20:
         mean = max_index
-    max_counts = counts[0]
-    min_counts = counts[-1]
+    max_counts = array[0]
+    min_counts = array[-1]
     if min_counts == 0:
         min_counts = 1
+    amp = max_value - (max_counts - min_counts)/2.0
     slope = (np.log(min_counts)-np.log(max_counts))/(points[-1]-points[0])
-    pinit = [counts[0],mean,sigma,counts[0]*count_offset,slope]
+    pinit = [amp,mean,sigma,array[0]*count_offset,slope]
     print('Initial parameters: {}'.format(pinit))
-    pars,errs = peak_fitter(points,counts,gaus_plus_exp,pinit)
+    pars,errs = peak_fitter(points,array,gaus_plus_exp,pinit)
     print('Fit parameters: {}'.format(pars))
     if make_plot:
         fig = plt.figure()
@@ -113,18 +114,21 @@ def single_peak_fit(array,lower,upper,sigma,count_offset=1,make_plot=False,save_
         plt.title('Spectra integrated over a day')
         plt.xlabel('channels')
         plt.ylabel('counts')
-        plt.xlim(lower,upper)
-        plt.ylim(counts[-1]*.1,counts[0]*10)
+        #plt.xlim(lower,upper)
+        #plt.ylim(counts[-1]*.1,counts[0]*10)
         x = ar(range(0,len(array)))
-        plt.plot(x,array,'b:',label='data')
-        plt.plot(x,gaus_plus_exp(x,pars),'ro:',label='fit')
+        plt.plot(points,array,'b:',label='data')
+        #pars = [ 2.95010675e+01, 1.06815654e+03, 6.94962149e+01, 3.89127957e+03, -4.64346847e-03]
+        plt.plot(points,gaus_plus_exp(points,pars),'ro:',label='fit')
         plt.legend()
         plt.yscale('log')
         if save_plot:
             #'/Users/alihanks/Google Drive/NQUAKE_analysis/D3S/fit_plots/'
             fig_file = plot_name+'.pdf'
             plt.savefig(fig_file)
-        plt.close()
+            plt.close()
+        else:
+            plt.show()
 
     if verbose:
         par_labels = ['norm','mean','sigma','amp','slope']
@@ -192,7 +196,7 @@ def double_peak_fit(array,counter,lower,upper,pindex=0,count_offset=1,make_plot=
     return mean,sigma,amp
 
 def get_peak_counts(mean,sigma,amp):
-    count,err = quad(gaus,0,500,args=(amp,mean,sigma))
+    count,err = quad(gaus,0,5000,args=(amp,mean,sigma))
     return count,err
 
 def get_all_peak_counts(means,sigmas,amps):
