@@ -59,9 +59,11 @@ def import_local_csv(file,lower,upper=5000):
         data.append(make_array(row,lower,upper))
     return data
 
-def main(input_file,limits,plot=False):
+def main(input_file,limits,save=False,plot=False,dofit=False):
     data = import_local_csv(input_file,limits[0],limits[1])
     integrated = sum(data)
+    if save:
+        np.savetxt('output.dat',integrated, delimiter='\n')
     if plot:
         fig = plt.figure()
         fig.patch.set_facecolor('white')
@@ -74,7 +76,7 @@ def main(input_file,limits,plot=False):
         plt.yscale('log')
         plt.show()
 
-    else:
+    if dofit:
         mean,sigma,amp = fitter.single_peak_fit(integrated,limits[0],limits[1],20.0,50,True)
         print('mean = {}, sigma = {}, amp = {}'.format(mean,sigma,amp))
         peak_counts = fitter.get_peak_counts(mean[0],sigma[0],amp[0])
@@ -88,6 +90,8 @@ if __name__ == '__main__':
     parser.add_argument("--input-file", type=str, dest='input_file', default='data.csv')
     parser.add_argument('--range', nargs='+', type=int, dest='range', default=[0,5000])
     parser.add_argument('--plot', dest='plot', action='store_true', default=False)
+    parser.add_argument('--fit', dest='fit', action='store_true', default=False)
+    parser.add_argument('--save', dest='save', action='store_true', default=False)
     info = parser.parse_args()
 
-    main(info.input_file,info.range,info.plot)
+    main(info.input_file,info.range,info.save,info.plot,info.fit)
