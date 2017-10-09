@@ -75,7 +75,7 @@ def peak_fitter(x,y,fit_function,pinit):
     perr_leastsq = np.array(error) 
     return pfit_leastsq, perr_leastsq 
 
-def single_peak_fit(array,counter,lower,upper,sigma,count_offset=1,make_plot=False,plot_name=''):
+def single_peak_fit(array,lower,upper,sigma,count_offset=1,make_plot=False,save_plot=False,plot_name=''):
     """
     Performs single gaussian + exponential background fit
 
@@ -120,8 +120,10 @@ def single_peak_fit(array,counter,lower,upper,sigma,count_offset=1,make_plot=Fal
         plt.plot(x,gaus_plus_exp(x,pars),'ro:',label='fit')
         plt.legend()
         plt.yscale('log')
-        fig_file = '/Users/alihanks/Google Drive/NQUAKE_analysis/D3S/fit_plots/'+plot_name+'_fit_'+str(counter)+'.pdf'
-        plt.savefig(fig_file)
+        if save_plot:
+            #'/Users/alihanks/Google Drive/NQUAKE_analysis/D3S/fit_plots/'
+            fig_file = plot_name+'.pdf'
+            plt.savefig(fig_file)
         plt.close()
 
     if verbose:
@@ -189,7 +191,11 @@ def double_peak_fit(array,counter,lower,upper,pindex=0,count_offset=1,make_plot=
             mean[1] = 150
     return mean,sigma,amp
 
-def get_peak_counts(means,sigmas,amps):
+def get_peak_counts(mean,sigma,amp):
+    count,err = quad(gaus,0,500,args=(amp,mean,sigma))
+    return count,err
+
+def get_all_peak_counts(means,sigmas,amps):
     '''
     Calculate the area under a gaussian curve (estimate of counts in that peak)
 
@@ -203,56 +209,13 @@ def get_peak_counts(means,sigmas,amps):
     '''
     counts = []
     for i in range(len(means)):
-        count,err = quad(gaus,0,500,args=(amps[i],means[i],sigmas[i]))
+        count,err = get_peak_counts(means[i],sigmas[i],amps[i])
         counts.append(count)
     return counts
 
-def verify_data(means,sigmas,amps):
-	# check for bad fits and use average of surrounding good fits
-	for i in range(len(means)):
-		if means[i][1] > 100:
-			print('Fit {} is bad!'.format(i))
-			j = 1
-			k = 1
-			if i<(len(means)-j):
-				while means[i+j][1] > 100:
-					j += 1
-					print('Trying {}+{} out of {}'.format(i,j,len(means)))
-					if i >= (len(means)-j):
-						print('Abort!')
-						break
-			if i>k:
-				while means[i-k][1] > 100:
-					k += 1
-					if i<k:
-						break
-			if i>k and i<(len(means)-j):
-				print('Averaging over {} and {}'.format(i-k,i+j))
-				means[i][0] = (means[i+j][0]+means[i-k][0])/2.0
-				means[i][1] = (means[i+j][1]+means[i-k][1])/2.0
-				sigmas[i][0] = (sigmas[i+j][0]+sigmas[i-k][0])/2.0
-				sigmas[i][1] = (sigmas[i+j][1]+sigmas[i-k][1])/2.0
-				amps[i][0] = (amps[i+j][0]+amps[i-k][0])/2.0
-				amps[i][1] = (amps[i+j][1]+amps[i-k][1])/2.0
-			elif i<k and i<(len(means)-j):
-				print('Using {}'.format(i+j))
-				means[i][0] = means[i+j][0]
-				means[i][1] = means[i+j][1]
-				sigmas[i][0] = sigmas[i+j][0]
-				sigmas[i][1] = sigmas[i+j][1]
-				amps[i][0] = amps[i+j][0]
-				amps[i][1] = amps[i+j][1]
-			elif i>k and i>=(len(means)-j):
-				print('Using {}'.format(i-k))
-				means[i][0] = means[i-k][0]
-				means[i][1] = means[i-k][1]
-				sigmas[i][0] = sigmas[i-k][0]
-				sigmas[i][1] = sigmas[i-k][1]
-				amps[i][0] = amps[i-k][0]
-				amps[i][1] = amps[i-k][1]
-			else:
-				print('Nothing makes sense')
-	return means,sigmas,amps
+def get_gross_counts(array,lower,upper):
+    counts = sum(array[lower:upper])
+    return counts
 
 def get_peaks(rows, nhours, tstart, tstop, fit_function, fit_args):
     '''
@@ -303,5 +266,4 @@ def get_peaks(rows, nhours, tstart, tstop, fit_function, fit_args):
             amps.append(amp)
             times.append(integration[int(len(integration)/2)][1])
 
-    means,sigmas,amps = verify_data(means,sigmas,amps)
     return times,means,sigmas,amps
