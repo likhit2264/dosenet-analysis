@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
-csv = np.genfromtxt('uranium_test_2019-02-19_D3S.csv', delimiter= ",").T
+csv = np.genfromtxt('Thorium_102566_2019-03-28_D3S.csv', delimiter= ",").T
 summed = np.sum(csv, axis=1)
 
 '''
