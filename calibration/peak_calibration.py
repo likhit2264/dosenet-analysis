@@ -58,7 +58,7 @@ def polyfit(x, m, b, r):
     return r * x*x + m*x + b
 p0 = [1, .6, 2]
 xpopt, xpcov = curve_fit(polyfit, channels, energies, p0)
-print("xpopt:" xpopt)
+print("xpopt:", xpopt)
 plt.plot(polyfit(range(max(channels)), *xpopt))
 plt.plot(channels, energies, 'r.')
 plt.show()

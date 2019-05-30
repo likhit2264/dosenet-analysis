@@ -1,7 +1,11 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
-csv = np.genfromtxt('Thorium_102566_2019-03-28_D3S.csv', delimiter= ",").T
+testnum = int(input("Enter test number (1, 2): "))
+detnum = int(input("Enter det number (1, 8): "))
+gentext = "RPi_data/Test_" + str(testnum) + "_p1_g" + str(detnum) + "_2019-05-28_D3S.csv"
+
+csv = np.genfromtxt(gentext, delimiter= ",").T
 summed = np.sum(csv, axis=1)
 
 '''
@@ -13,10 +17,13 @@ def checkShape(i, data, r, e):
     prev=sweep[r]
     if not prev == max(sweep):# or prev < np.average(data)/4:
         return False
-    if not prev > np.average(sweep) * 1.5:
-        return False
+#     if not prev > np.average(sweep) * 1.5:
+#         return False
+    e = e * 2
+    # ^because the code checks r indices to the left and right
     for k in range(1, r+1):
         if e < 0:
+            #print(e)
             return False
         if sweep[r-k] > prev:
             e = e - 1
@@ -35,27 +42,28 @@ Takes in a summed peak count, a peak range, and an error allowance and returns p
 Peak range is the number of values the function will look at on either side
 Error allowance is the number of values within the peak range that are allowed to not fit a downwards slope
 '''
-def sweepLeft(data, r=60, e=50):
-    bubbles = []
+def sweepLeft(data, r, e):
+    peaks = []
     index = r
     while index < len(data) - r:
         if checkShape(index, data, r, e):
-            bubbles.append(index)
-            index = index + r - e
+            peaks.append(index)
+            index = index + r - e//2
         else:
             index += 1
-    return bubbles
+    return peaks
 peakRange = int(input("Enter a peak range: "))
 errAllo = int(input("Enter an error allowance: "))
 
 
 ldots = sweepLeft(summed, peakRange, errAllo)
-print("returned peaks: ", ldots)
+print("returned peaks:", ldots)
+print("len peaklist:", len(ldots))
 #print(len(ldots))
 #print(np.average(summed)/4)
 x=np.arange(len(summed))
 plt.plot(summed)
-plt.plot(x, np.average(summed)/4 + 0*x)
+#plt.plot(x, np.average(summed)/4 + 0*x)
 plt.plot(ldots, summed[ldots], 'ro')
 plt.yscale('log')
 plt.show()
