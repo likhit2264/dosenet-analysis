@@ -6,6 +6,10 @@ __pycache__/
 # C extensions
 *.so
 
+# Temporary output from scripts
+binned_data/
+wunderground_data/
+
 # Distribution / packaging
 .Python
 env/
