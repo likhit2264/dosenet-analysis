@@ -22,7 +22,7 @@ def fixed(fix,par):
     return bound((fix,fix), par)
 
 def gaus(x,a,x0,sigma):
-    return a*exp(-(x-x0)**2/(2*sigma**2))+lbound(0,a)+bound([0,7],sigma)+lbound(0,x0)
+    return a*exp(-(x-x0)**2/(2*sigma**2))+lbound(0,a)+lbound(0,sigma)+lbound(0,x0)
 
 def expo(x,a,slope):
     return a*exp(x*slope)+lbound(0,a)+ubound(0,slope)
@@ -41,7 +41,7 @@ def double_gaus_plus_exp(x,p):
 def double_gaus_plus_line(x,p):
     return gaus(x,p[0],p[1],p[2])+gaus(x,p[3],p[4],p[5])+p[6]*x+p[7]
 
-def peak_fitter(x,y,fit_function,pinit): 
+def peak_fitter(x,y,fit_function,pinit):
     """
     Peak Finder for peak in specified range
 
@@ -54,7 +54,7 @@ def peak_fitter(x,y,fit_function,pinit):
     Returns:
         array of resulting fit parameters and array of fit errors
     """
-    errfunc = lambda p, x, y: fit_function(x,p) - y 
+    errfunc = lambda p, x, y: fit_function(x,p) - y
     pfit,pcov,infodict,errmsg,success = \
         optimize.leastsq(errfunc, pinit, args=(x,y), \
             full_output=1, epsfcn=0.0001)
@@ -65,15 +65,15 @@ def peak_fitter(x,y,fit_function,pinit):
     else:
         pcov = 0
 
-    error = [] 
+    error = []
     for i in range(len(pfit)):
         try:
           error.append(np.absolute(pcov[i][i])**0.5)
         except:
           error.append( 0.00 )
     pfit_leastsq = pfit
-    perr_leastsq = np.array(error) 
-    return pfit_leastsq, perr_leastsq 
+    perr_leastsq = np.array(error)
+    return pfit_leastsq, perr_leastsq
 
 def single_peak_fit(array,lower,upper,sigma,count_offset=1,make_plot=False,save_plot=False,plot_name=''):
     """
@@ -116,8 +116,9 @@ def single_peak_fit(array,lower,upper,sigma,count_offset=1,make_plot=False,save_
         plt.xlim(lower,upper)
         plt.ylim(counts[-1]*.1,counts[0]*10)
         x = ar(range(0,len(array)))
-        plt.plot(x,array,'b:',label='data')
-        plt.plot(x,gaus_plus_exp(x,pars),'ro:',label='fit')
+        plt.plot(points,array,'b:',label='data')
+        #pars = [ 2.95010675e+01, 1.06815654e+03, 6.94962149e+01, 3.89127957e+03, -4.64346847e-03]
+        plt.plot(points,gaus_plus_exp(points,pars),'ro:',label='fit')
         plt.legend()
         plt.yscale('log')
         if save_plot:
@@ -205,7 +206,7 @@ def get_all_peak_counts(means,sigmas,amps):
       - list of gaussian amplitudes
 
     Returns:
-      - list of counts from resulting gaussian integrations 
+      - list of counts from resulting gaussian integrations
     '''
     counts = []
     for i in range(len(means)):

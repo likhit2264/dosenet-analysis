@@ -30,7 +30,7 @@ importlib.reload(fitter)
 #--------------------------------------------------------------------------#
 # Process input data
 #--------------------------------------------------------------------------#
-def make_int(lst): 
+def make_int(lst):
     '''
     Makes all entries of a list an integer
     '''
@@ -39,9 +39,9 @@ def make_int(lst):
         y.append(int(i))
     return y
 
-def make_array(lst): 
+def make_array(lst):
     '''
-    Makes list into an array. Also splices out the irrelevant stuff 
+    Makes list into an array. Also splices out the irrelevant stuff
     for a spectra
     '''
     y = np.asarray(make_int(lst[12:]))
@@ -162,7 +162,7 @@ def SelectDataTimeRange(start_time,stop_time,data,times):
     indices = np.where((timesarray>=start_time)&(timesarray<=stop_times))
     subdata  = dataarray[indices]
     subdatatimes = timesarray[indices]
-   
+
     return subdata, subdatatimes
 
 def merge_data(times1,data1,times2,data2):
@@ -218,7 +218,7 @@ def get_spectra(rows, nhours, tstart, tstop):
             if len(integration)==0:
                 continue
 
-            array_lst = [] 
+            array_lst = []
             for j in integration:
                 array_lst.append(make_array(j))
             integrated = sum(array_lst)
@@ -331,7 +331,7 @@ def get_peaks(rows, nhours, tstart, tstop, fit_function, fit_args):
             if len(integration)==0:
                 continue
 
-            array_lst = [] 
+            array_lst = []
             for j in integration:
                 array_lst.append(make_array(j))
             integrated = sum(array_lst)
