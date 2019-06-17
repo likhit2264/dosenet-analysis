@@ -31,7 +31,7 @@ reload(fitter)
 #--------------------------------------------------------------------------#
 # Process input data
 #--------------------------------------------------------------------------#
-def make_int(lst): 
+def make_int(lst):
     '''
     Makes all entries of a list an integer
     '''
@@ -41,9 +41,9 @@ def make_int(lst):
         y.append(int(i))
     return y
 
-def make_array(lst,lower,upper=5000): 
+def make_array(lst,lower,upper=5000):
     '''
-    Makes list into an array. Also splices out the irrelevant stuff 
+    Makes list into an array. Also splices out the irrelevant stuff
     for a spectra
     '''
     y = np.asarray(make_int(lst[lower:upper]))
